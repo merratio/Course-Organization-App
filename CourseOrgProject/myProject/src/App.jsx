@@ -63,6 +63,40 @@ function Form(){
   
 }
 
+//view to add information about coursework
+function AddCoursework(){
+  const [cCode, setCCode] = useState("");
+  const [cName, setCName] = useState("");
+  const storedId = localStorage.getItem('iden');
+  const id = JSON.parse(storedId);
+
+  const add = async () =>{
+    let mod;
+    try{
+      axios.post('http://localhost:8080/api/modules', mod = {modCode: cCode, modName: cName, userId: id.key})
+      .then((response) => {
+        console.log(response);
+      });
+
+    }catch(err){
+      console.log(err);
+    }
+    
+
+  } 
+  
+  return( 
+    <>
+    <div className='formDiv'>
+      <Box label='Course Code: ' type="text" val={cCode} onValueChange={setCCode}/>
+      <Box label='Course Name: ' type="text" val={cName} onValueChange={setCName}/>
+      <Btn classn={'sidebarBtnq'} btnHandler={() => add()} value={'Add'}/>
+
+    </div>
+    </>
+  );
+}
+
 //what users see when the log in(A list of courses that they have already added to their account )
 function Home1(){
   const storedId = localStorage.getItem('iden');
@@ -147,15 +181,51 @@ function CourseWork(){
     fetchData();
   });
 
+  //add course work
+  function addCourse(){
+    window.open("/Home/addCoursework", "_self", "_self");
+  }
+
   return(
-    <ul>
+    <>
+    <center>
+    <table className='table'border={5} cellPadding={10}>
+      <tr>
+        <th>Coursework</th>
+        <th>Weight</th>
+        <th>Due Date</th>
+        <th>Grade out of 100</th>
+        <th>Grade out of weight</th>
+      </tr>
+      
       {
         data.map((item) =>(
-          <li key={item.courseId}>{item.name}</li>
+          <>
+          <tr className='row'>
+          <td className='col' key={item.courseId}>{item.name}</td>
+          <td className='col'>{item.percentage}</td>
+          <td className='col'>{item.dueDate}</td>
+          <td className='col'>{item.gradeOutOf100}</td>
+          <td className='col'>{item.gradeOutOfPercentage}</td>
+
+          </tr>
+          
+          </>
         ))
       }
-    </ul>
+
+    
+    </table>
+    <br />
+
+    <Btn classn={"sidebarBtn"} btnHandler={() => addCourse()} value={"Add Coursework"}/>
+      
+    </center>
+    </>
+    
   );
+
+  
 }
 
 //creates the ability to toggle between view of courses, coursework and profile. The sidebar with a navigation list is also seen
@@ -194,6 +264,8 @@ function Home(){
         <Route path='' element={<Home1/>}></Route>
         <Route path='/addCourses' element={<Form />}></Route>
         <Route path='/courseWork' element={<CourseWork/>}></Route>
+        <Route path='/addCoursework' element={<AddCoursework/>}></Route>
+
       </Routes>
     
           
@@ -306,6 +378,8 @@ function App() {
       <Link to={'/Profile'}></Link>
       <Link to={'/addCourses'}></Link>
       <Link to={'/courseWork'}></Link>
+      <Link to={'/addCourseWork'}></Link>
+
 
     </BrowserRouter>
       
