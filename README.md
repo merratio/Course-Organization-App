@@ -14,3 +14,7 @@ Database: mysql
 I am new to the world of react and I thought this was a great opportunity to learn it in a trial and error method,
 it was a fun experience. I used the spring framework in java to write a rest API and while I am comfortable with java
 this was also a trial and error with the framework
+
+## For Future
+I would intend to learn more about of containerization and return to this project and deploy it with github actions
+automating the process
