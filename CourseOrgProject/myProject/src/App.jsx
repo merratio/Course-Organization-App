@@ -44,6 +44,8 @@ function Form(){
 
     }catch(err){
       console.log(err);
+    }finally{
+      alert("module added successfully!");
     }
     
 
@@ -65,22 +67,42 @@ function Form(){
 
 //view to add information about coursework
 function AddCoursework(){
-  const [cCode, setCCode] = useState("");
-  const [cName, setCName] = useState("");
+  const storedCode = localStorage.getItem('code');
+  const code = JSON.parse(storedCode);
   const storedId = localStorage.getItem('iden');
   const id = JSON.parse(storedId);
 
+  const [name, setName] = useState("");
+  const [percentage, setPercentage] = useState(0);
+  const [date, setDate] = useState("");
+  const [gradeOutOf100, setGradeOutOf100] = useState(0);
+  const [gradeOutOfPercentage, setGradeOutOfPercentage] = useState(0);
+  
+
   const add = async () =>{
-    let mod;
+    let coursework;
     try{
-      axios.post('http://localhost:8080/api/modules', mod = {modCode: cCode, modName: cName, userId: id.key})
+      axios.post('http://localhost:8080/api/coursework', coursework = {
+        "name": name,
+        "percentage": percentage,
+        "dueDate": date,
+        "gradeOutOf100": gradeOutOf100,
+        "gradeOutOfPercentage": gradeOutOfPercentage,
+        "userId": id.key,
+        "moduleCode": code.key,
+
+      })
       .then((response) => {
         console.log(response);
       });
 
     }catch(err){
       console.log(err);
+    }finally{
+      alert("coursework added successfully!");
     }
+
+    console.log(coursework.moduleCode);
     
 
   } 
@@ -88,8 +110,11 @@ function AddCoursework(){
   return( 
     <>
     <div className='formDiv'>
-      <Box label='Course Code: ' type="text" val={cCode} onValueChange={setCCode}/>
-      <Box label='Course Name: ' type="text" val={cName} onValueChange={setCName}/>
+      <Box label='Coursework: ' type="text" val={name} onValueChange={setName}/>
+      <Box label='Coursework weight: ' type="text" val={percentage} onValueChange={setPercentage}/>
+      <Box label='Due Date: ' type="date" val={date} onValueChange={setDate}/>
+      <Box label='Grade out of 100: ' type="text" val={gradeOutOf100} onValueChange={setGradeOutOf100}/>
+      <Box label='Grade out of weight: ' type="text" val={gradeOutOfPercentage} onValueChange={setGradeOutOfPercentage}/>
       <Btn classn={'sidebarBtnq'} btnHandler={() => add()} value={'Add'}/>
 
     </div>
@@ -159,6 +184,59 @@ function Home1(){
   );
 }
 
+function Input2({val, courseId}){
+  //function to update information in the database
+    const updatePercent = (grade) => {
+      try{
+        axios.put(`http://localhost:8080/api/coursework/percent/${courseId}` , grade, {
+          headers:{
+            "Content-Type": "application/json"
+          }
+        });
+  
+      }catch(err){
+        console.log(err);
+      }
+  
+    }
+  
+    return(
+      <input className='ini' type="text" value={val} onChange={(e) => {
+        courseId = courseId;
+        updatePercent(e.target.value);
+      }}/>
+  
+    );
+      
+  }
+
+
+function Input({val, courseId}){
+//function to update information in the database
+  const update100 = (grade) => {
+    try{
+      axios.put(`http://localhost:8080/api/coursework/${courseId}` , grade, {
+        headers:{
+          "Content-Type": "application/json"
+        }
+      });
+
+    }catch(err){
+      console.log(err);
+    }
+
+  }
+
+  return(
+    <input className='ini' type="text" value={val} onChange={(e) => {
+      courseId = courseId;
+      update100(e.target.value);
+    }}/>
+
+  );
+    
+}
+
 //area where course work is viewed
 function CourseWork(){
   const storedId = localStorage.getItem('iden');
@@ -181,38 +259,59 @@ function CourseWork(){
     fetchData();
   });
 
+  var courseId;
+  var courseIden = []; 
+  var grade100 = [];
+  var gradePercent = [];
+
+  data.map((item) => (courseIden.push(item.courseId)))
+  data.map((item) => (grade100.push(item.gradeOutOf100)))
+  data.map((item) => (gradePercent.push(item.gradeOutOfPercentage)))
+
+
   //add course work
   function addCourse(){
     window.open("/Home/addCoursework", "_self", "_self");
   }
 
+  const tableItems = data.map((item) => (
+    <>
+      <tr>
+        <td className='col' key={item.courseId}>{item.name}</td>
+        <td className='col'>{item.percentage}</td>
+        <td className='col'>{item.dueDate}</td>
+        <td className='col'><Input courseId={item.courseId} val={grade100[data.indexOf(item)]}/></td>
+        <td className='col'><Input2 courseId={item.courseId} val={gradePercent[data.indexOf(item)]}/></td>
+
+      </tr>
+        
+    </>
+    
+  ))
+
   return(
     <>
     <center>
     <table className='table'border={5} cellPadding={10}>
-      <tr>
+      <thead>
+        <tr>
         <th>Coursework</th>
         <th>Weight</th>
         <th>Due Date</th>
         <th>Grade out of 100</th>
         <th>Grade out of weight</th>
-      </tr>
-      
-      {
-        data.map((item) =>(
-          <>
-          <tr className='row'>
-          <td className='col' key={item.courseId}>{item.name}</td>
-          <td className='col'>{item.percentage}</td>
-          <td className='col'>{item.dueDate}</td>
-          <td className='col'>{item.gradeOutOf100}</td>
-          <td className='col'>{item.gradeOutOfPercentage}</td>
 
-          </tr>
-          
-          </>
-        ))
+        </tr>
+        
+      </thead>
+      <tbody>
+      {
+        tableItems
       }
+
+      </tbody>
+      
+      
 
     
     </table>
@@ -241,6 +340,13 @@ function Home(){
     window.open("/Home", "_self", "_self");
     
   }
+
+  const navigate = useNavigate();
+  //logs you out of the system
+  function logOut(){
+    
+    navigate("/login", {replace: true});
+  }
   return(
     <>
     <div className='home'>
@@ -250,7 +356,7 @@ function Home(){
         <br />
         <Btn classn='sidebarBtn' btnHandler={() => toogleToHome()} value={'Home'}/>
         <Btn classn='sidebarBtn' btnHandler={() => toogleToProfile()} value={'Profile'}/>
-        <Btn classn='sidebarBtn' btnHandler={null} value={'Log Out'}/>
+        <Btn classn='sidebarBtn' btnHandler={() => logOut()} value={'Log Out'}/>
         
 
       </div>
@@ -292,6 +398,55 @@ function Box({label,type, val, onValueChange}){
     
 }
 
+//sign up view
+function Signup(){
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userPassword, setUserPassword] = useState("");
+
+  const add = async () =>{
+    try{
+      axios.post('http://localhost:8080/api/users', {
+        "name": userName,
+        "email": userEmail,
+        "password": userPassword 
+      })
+      .then((response) => {
+        console.log(response);
+      });
+
+    }catch(err){
+      console.log(err);
+    }finally{
+      alert("user added successfully!");
+    }
+    
+
+  } 
+  
+  return( 
+    <>
+    <center>
+      
+    <div className='signupDiv'>
+      <header>
+        Course Organization App Signup
+      </header>
+      <br />
+      <Box label='Name: ' type="text" val={userName} onValueChange={setUserName}/>
+      <Box label='Email: ' type="text" val={userEmail} onValueChange={setUserEmail}/>
+      <Box label='Password: ' type="password" val={userPassword} onValueChange={setUserPassword}/>
+      <Btn classn={'sidebarBtnq'} btnHandler={() => add()} value={'Add'}/>
+
+    </div>
+
+    </center>
+    
+    </>
+
+  );
+}
+
 //function represents the login page 
 function Main(){
   const [id, setId] = useState(0);
@@ -324,16 +479,21 @@ function Main(){
   function handleLogin(){
     console.log(data.email);
     if(data.email !== ""){
-      if(data.email == val1){
+      if(data.email == val1 && data.password == val2){
         setLogin(true);
         const thing ={key: id};
         localStorage.setItem('iden', JSON.stringify(thing));
-        window.open("/Home", "_self", "_self");    
+        navigate("/Home");    
       } 
       else{
         console.log("false");
       }
     }
+  }
+
+  const navigate = useNavigate();
+  function handleSignUp(){
+    navigate('/Signup')
   }
 
   return(
@@ -342,9 +502,10 @@ function Main(){
         <h2>Login</h2>
         <Box label="Username: " type={"text"} val={val1} onValueChange={setVal1}/>
         <Box label="Password: " type={"password"} val={val2} onValueChange={setVal2}/>
-        
+
         <Button onLogin={()=> handleLogin()}/>
-        
+        <button onClick={() => handleSignUp()}>Sign up</button>
+               
       </div>
 
     </div>
@@ -358,7 +519,6 @@ function Button({onLogin}){
   return(
     <>
       <button onClick={onLogin} type='button'>Login</button>
-      <br /><br />
     </>
   )
 }
@@ -371,8 +531,9 @@ function App() {
     <> 
     <BrowserRouter>
       <Routes>
-        <Route path='/' element={<Main />}/>
+        <Route path='/login' element={<Main />}/>
         <Route path='/Home/*' element={<Home/>}/>
+        <Route path='/Signup' element={<Signup/>}></Route>
       </Routes>
       <Link to={"/Home/*"}></Link>
       <Link to={'/Profile'}></Link>
