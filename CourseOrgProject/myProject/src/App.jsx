@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react'
 import './App.css';
 import axios from 'axios';
-import {useNavigate, BrowserRouter, Route, Link, Routes, generatePath} from 'react-router-dom';
+import {useNavigate, BrowserRouter, Route, Link, Routes, Outlet, Navigate} from 'react-router-dom';
  
+//hide pages unless logged in
+const ProtectedRoute = () =>{
+  const User = localStorage.getItem("iden");
+  const user = JSON.parse(User);
+
+
+  return user ? <Outlet/>: <Navigate to={"/login"}/>
+
+}
 
 //function creates a component for buttons
 function Btn({classn, btnHandler, value}){
@@ -344,8 +353,8 @@ function Home(){
   const navigate = useNavigate();
   //logs you out of the system
   function logOut(){
-    
     navigate("/login", {replace: true});
+    localStorage.setItem("iden", null);
   }
   return(
     <>
@@ -453,41 +462,23 @@ function Main(){
   const [val1,setVal1] = useState("");
   const [val2,setVal2] = useState("");
   const [login,setLogin] = useState(false);
-  const data = {email: "", name:"", password:"", userId:null};
   
 
-  useEffect(() =>{
-    const fetchData = async () => {
-      try{
-        const response = await axios.get(`http://localhost:8080/api/users/${val1}`);
-        setId(response.data.userId);
-        
-        data.email = response.data.email;
-        data.password = response.data.password;
+  const handleLogin = async() =>{
+    const response = await axios.post("http://localhost:8080/api/users/login", {
+      "email": val1,
+      "password": val2
+    });
 
-        console.log(id);
-      }catch(err){
-        console.log(err);
-      }
-    }
-
-    fetchData();
-
-  });
-
-
-  function handleLogin(){
-    console.log(data.email);
-    if(data.email !== ""){
-      if(data.email == val1 && data.password == val2){
-        setLogin(true);
-        const thing ={key: id};
-        localStorage.setItem('iden', JSON.stringify(thing));
-        navigate("/Home");    
-      } 
-      else{
+    
+    if(response.data){
+      const thing ={key: response.data.userId};
+      localStorage.setItem('iden', JSON.stringify(thing));
+      console.log("hi");
+      navigate("/Home");    
+    } 
+    else{
         console.log("false");
-      }
     }
   }
 
@@ -532,7 +523,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path='/login' element={<Main />}/>
-        <Route path='/Home/*' element={<Home/>}/>
+        <Route element={<ProtectedRoute/>}>
+          <Route path='/Home/*' element={<Home/>}/>
+        </Route>
         <Route path='/Signup' element={<Signup/>}></Route>
       </Routes>
       <Link to={"/Home/*"}></Link>

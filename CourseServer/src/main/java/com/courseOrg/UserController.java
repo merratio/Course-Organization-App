@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +41,21 @@ public class UserController {
 		service.save(user);
 	}
 	
+	@PostMapping("/login")
+	public User post(@RequestBody Login login) {
+		Optional<User> userTest = service.findByEmail(login.getEmail());
+		
+		if(userTest.isPresent()) {
+			User user = userTest.get();
+			if(user.getPassword().equals(login.getPassword())) {
+				return user;
+			}
+			
+		}
+		
+		return null;
+		
+	}
 	
 	
 
